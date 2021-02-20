@@ -24,61 +24,12 @@ class CanCopyLabel(ttk.Entry):
         tk._default_root.clipboard_append(self.get())
 
 
-import fractions
-
-
-def calc_slu2(f, s):
-    cf = f[:]
-    zero = s[0]
-    zerof = f[0]
-    for i in range(len(f)):
-        f[i] = f[i] * zero
-        s[i] = s[i] * zerof
-    try:
-        Y = (f[2] - s[2]) / (f[1] - s[1])
-        X = (f[2] - f[1] * Y) / f[0]
-    except Exception as E:
-        raise ValueError('error in calc system of linear alg - ' + str(E))
-
-    return X, Y
-
-
-def calc_slu3(f, s, t):
-    zerof = f[0]
-    zeros = s[0]
-    zerot = t[0]
-    fc = f[:]
-    for i in range(4):
-        fc[i] = fc[i] * zeros
-        s[i] = s[i] * zerof
-    row1 = []
-    for i in range(1, 4):
-        row1.append(s[i] - fc[i])
-    fc = f[:]
-    for i in range(4):
-        fc[i] = fc[i] * zerot
-        t[i] = t[i] * zerof
-    row2 = []
-    for i in range(1, 4):
-        row2.append(t[i] - fc[i])
-    Y, Z = calc_slu2(row1, row2)
-    X = (f[-1] - Z * f[2] - Y * f[1]) / f[0]
-    return X, Y, Z
-
-
 def initSpher(a, f):
     b = a * (1. - f)
     c = a / (1. - f)
     e2 = f * (2. - f)
     e12 = e2 / (1. - e2)
     return (b, c, e2, e12)
-
-
-def N(B):
-    return ECVATOR_EARTH_RADIUS ** 2 / math.sqrt(
-        ECVATOR_EARTH_RADIUS ** 2 * math.cos(math.radians(B)) ** 2 + POLUS_EARTH_RADIUS ** 2 * math.sin(
-            math.radians(B)))
-
 
 III = 0
 
@@ -134,9 +85,7 @@ def to_geodezic_system(x, y, z):
     return math.degrees(math.atan(tg_B_1)), math.degrees(math.atan2(math.radians(y), math.radians(x)))
 
 
-# Find the intersection of three spheres                  
-# P1,P2,P3 are the centers, r1,r2,r3 are the radii       
-# Implementaton based on Wikipedia Trilateration article. 
+
 def trilaterate(P1, P2, P3, r1, r2, r3):
     P1 = numpy.array(P1)
     P2 = numpy.array(P2)
@@ -157,27 +106,6 @@ def trilaterate(P1, P2, P3, r1, r2, r3):
     p_12_a = P1 + x * e_x + y * e_y + z * e_z
     p_12_b = P1 + x * e_x + y * e_y - z * e_z
     return p_12_a, p_12_b
-
-
-def trilaterate2(P1, P2, P3, r1, r2, r3):  # Решение системы уравнений
-    x1, y1, z1 = P1
-    x2, y2, z2 = P2
-    x3, y3, z3 = P3
-    first_row = [
-        2 * (x2 - x1), 2 * (y2 - y1), 2 * (z2 - z1),
-        r1 ** 2 - r2 ** 2 - x1 ** 2 - y1 ** 2 - z1 ** 2 + x2 ** 2 + y2 ** 2 + z2 ** 2
-    ]
-    second_row = [
-        2 * (x3 - x1), 2 * (y3 - y1), 2 * (z3 - z1),
-        r1 ** 2 - r3 ** 2 - x1 ** 2 - y1 ** 2 - z1 ** 2 + x3 ** 2 + y3 ** 2 + z3 ** 2
-    ]
-    third_row = [
-        2 * (x2 - x3), 2 * (y2 - y3), 2 * (z2 - z3),
-        r3 ** 2 - r2 ** 2 - x3 ** 2 - y3 ** 2 - z3 ** 2 + x2 ** 2 + y2 ** 2 + z2 ** 2
-    ]
-    print(first_row, second_row, third_row, sep='\n')
-    X, Y, Z = calc_slu3(first_row, second_row, third_row)
-    return X, Y, Z
 
 
 def from_gcoods(coods):
